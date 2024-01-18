@@ -47,17 +47,18 @@ class TournamentClient:
             team_standings[team.persistent_team_id] = BracketStanding({}, team)
         for match in stage_data.raw_matches:
             try:
-                top_winner = match.get("top", {}).get("winner", False)
-                bottom_winner = match.get("bottom", {}).get("winner", False)
-                if top_winner:
-                    team_standings[match["bottom"]["team"]["persistentTeamID"]].set_losses += 1
-                    team_standings[match["top"]["team"]["persistentTeamID"]].set_wins += 1
-                elif bottom_winner:
-                    team_standings[match["top"]["team"]["persistentTeamID"]].set_losses += 1
-                    team_standings[match["bottom"]["team"]["persistentTeamID"]].set_wins += 1
-                else:
-                    team_standings[match["top"]["team"]["persistentTeamID"]].set_ties += 1
-                    team_standings[match["bottom"]["team"]["persistentTeamID"]].set_ties += 1
+                if ("team" in match.get("top", {})) and "team" in match.get("bottom", {}):
+                    top_winner = match.get("top", {}).get("winner", False)
+                    bottom_winner = match.get("bottom", {}).get("winner", False)
+                    if top_winner:
+                        team_standings[match["bottom"]["team"]["persistentTeamID"]].set_losses += 1
+                        team_standings[match["top"]["team"]["persistentTeamID"]].set_wins += 1
+                    elif bottom_winner:
+                        team_standings[match["top"]["team"]["persistentTeamID"]].set_losses += 1
+                        team_standings[match["bottom"]["team"]["persistentTeamID"]].set_wins += 1
+                    else:
+                        team_standings[match["top"]["team"]["persistentTeamID"]].set_ties += 1
+                        team_standings[match["bottom"]["team"]["persistentTeamID"]].set_ties += 1
             except Exception:
                 continue
         if stage_data.bracket.style == "double":
@@ -96,20 +97,52 @@ class TournamentClient:
                 placement_data[r + 1] = []
             for match in stage_data.raw_matches:
                 try:
-                    placement_number = match.get("roundNumber", 0)
-                    if match["top"]["winner"]:
-                        placement_data[placement_number].append(match["bottom"]["team"]["persistentTeamID"])
-                    elif match["bottom"]["winner"]:
-                        placement_data[placement_number].append(match["top"]["team"]["persistentTeamID"])
-                    else:
-                        placement_data[placement_number].append(match["top"]["team"]["persistentTeamID"])
-                        placement_data[placement_number].append(match["bottom"]["team"]["persistentTeamID"])
+                    if ("team" in match.get("top", {})) and "team" in match.get("bottom", {}):
+                        if not match.get("matchType", "") == "loser":
+                            if match.get("roundNumber", 0) == stage_data.bracket.rounds_count:
+                                first = len(rankings)
+                                second = len(rankings) - 1
+                                if match["top"]["winner"]:
+                                    placement_data[first].append(match["top"]["team"]["persistentTeamID"])
+                                    placement_data[second].append(match["bottom"]["team"]["persistentTeamID"])
+                                elif match["bottom"]["winner"]:
+                                    placement_data[second].append(match["top"]["team"]["persistentTeamID"])
+                                    placement_data[first].append(match["bottom"]["team"]["persistentTeamID"])
+                                else:
+                                    placement_data[second].append(match["top"]["team"]["persistentTeamID"])
+                                    placement_data[second].append(match["bottom"]["team"]["persistentTeamID"])
+                            else:
+                                # Skip round 2 if we have a third place match
+                                if stage_data.bracket.has_third_place_match:
+                                    if match.get("roundNumber", 0) == stage_data.bracket.rounds_count - 1:
+                                        continue
+                                placement_number = match.get("roundNumber", 0)
+                                if match["top"]["winner"]:
+                                    placement_data[placement_number].append(match["bottom"]["team"]["persistentTeamID"])
+                                elif match["bottom"]["winner"]:
+                                    placement_data[placement_number].append(match["top"]["team"]["persistentTeamID"])
+                                else:
+                                    placement_data[placement_number].append(match["top"]["team"]["persistentTeamID"])
+                                    placement_data[placement_number].append(match["bottom"]["team"]["persistentTeamID"])
+                        else:  # In a 3rd place match
+                            third = len(rankings)-2
+                            fourth = len(rankings)-3
+                            if match["top"]["winner"]:
+                                placement_data[third].append(match["top"]["team"]["persistentTeamID"])
+                                placement_data[fourth].append(match["bottom"]["team"]["persistentTeamID"])
+                            elif match["bottom"]["winner"]:
+                                placement_data[third].append(match["bottom"]["team"]["persistentTeamID"])
+                                placement_data[fourth].append(match["top"]["team"]["persistentTeamID"])
+                            else:
+                                placement_data[fourth].append(match["top"]["team"]["persistentTeamID"])
+                                placement_data[fourth].append(match["bottom"]["team"]["persistentTeamID"])
                 except Exception:
                     continue
         else:
             raise ValueError(f"Invalid bracket style {stage_data.bracket.style}")
         for key, value in placement_data.items():
-            for team_id in value:
+            set_value = list(set(value))  # Remove duplicate teams in a round
+            for team_id in set_value:
                 team_standings[team_id].set_place(rankings[key - 1])
                 stage_data.add_standing(team_standings[team_id])
         return stage_data
