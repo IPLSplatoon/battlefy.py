@@ -39,13 +39,18 @@ class Match:
         self.id = match_data.get("_id", None)
         if created_at := match_data.get("createdAt", None):
             self.created_at = dateutil.parser.parse(created_at)
-        for g in match_data.get("stats", []):
-            self.games.append(Game(g))
-        for game in self.games:
-            if game.winner == 0:
-                self.top_win += 1
-            elif game.winner == 1:
-                self.bottom_win += 1
+        if "stats" in match_data:
+            for g in match_data.get("stats", []):
+                self.games.append(Game(g))
+            for game in self.games:
+                if game.winner == 0:
+                    self.top_win += 1
+                elif game.winner == 1:
+                    self.bottom_win += 1
+        else:
+            self.top_win = match_data.get("top", {}).get("score", 0)
+            self.bottom_win = match_data.get("bottom", {}).get("score", 0)
+
 
     @property
     def valid_games(self):
