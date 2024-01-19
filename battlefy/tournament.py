@@ -305,26 +305,29 @@ class TournamentClient:
                                                     "")
         return stage_data
 
-    async def __get_stage(self, stage_data: Stage, tournament_data: Tournament) -> Stage:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                    f"https://api.battlefy.com/stages/{stage_data.id}?extend[matches][top.team][players][user]=true&extend[matches][top.team][persistentTeam]=true&extend[matches][bottom.team][players][user]=true&extend[matches][bottom.team][persistentTeam]=true&extend[groups][teams]=true&extend[groups][matches][top.team][players][user]=true&extend[groups][matches][top.team][persistentTeam]=true&extend[groups][matches][bottom.team][players][user]=true&extend[groups][matches][bottom.team][persistentTeam]=true",
-                    headers=self.headers) as resp:
-                if resp.status != 200:
-                    raise ValueError(f"Invalid ID {stage_data.id}")
-                stage_request = await resp.json()
-                stage_request = stage_request[0]
-                stage_data.raw_matches = stage_request.get("matches", [])
-                for match in stage_data.raw_matches:
-                    top_team_id = match.get("top", {}).get("team", {}).get("persistentTeamID", None)
-                    bottom_team_id = match.get("bottom", {}).get("team", {}).get("persistentTeamID", None)
-                    if top_team_id and bottom_team_id:
-                        top_team = tournament_data.get_team_from_persistent_team_id(top_team_id)
-                        bottom_team = tournament_data.get_team_from_persistent_team_id(bottom_team_id)
-                        if top_team and bottom_team:
-                            stage_data.add_match(Match(match_data=match, top=top_team, bottom=bottom_team))
-        await self.__get_standings(stage_data, tournament_data)
-        return stage_data
+    async def __get_stage(self, stage_data: Stage, tournament_data: Tournament) -> Optional[Stage]:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                        f"https://api.battlefy.com/stages/{stage_data.id}?extend[matches][top.team][players][user]=true&extend[matches][top.team][persistentTeam]=true&extend[matches][bottom.team][players][user]=true&extend[matches][bottom.team][persistentTeam]=true&extend[groups][teams]=true&extend[groups][matches][top.team][players][user]=true&extend[groups][matches][top.team][persistentTeam]=true&extend[groups][matches][bottom.team][players][user]=true&extend[groups][matches][bottom.team][persistentTeam]=true",
+                        headers=self.headers) as resp:
+                    if resp.status != 200:
+                        raise ValueError(f"Invalid ID {stage_data.id}")
+                    stage_request = await resp.json()
+                    stage_request = stage_request[0]
+                    stage_data.raw_matches = stage_request.get("matches", [])
+                    for match in stage_data.raw_matches:
+                        top_team_id = match.get("top", {}).get("team", {}).get("persistentTeamID", None)
+                        bottom_team_id = match.get("bottom", {}).get("team", {}).get("persistentTeamID", None)
+                        if top_team_id and bottom_team_id:
+                            top_team = tournament_data.get_team_from_persistent_team_id(top_team_id)
+                            bottom_team = tournament_data.get_team_from_persistent_team_id(bottom_team_id)
+                            if top_team and bottom_team:
+                                stage_data.add_match(Match(match_data=match, top=top_team, bottom=bottom_team))
+            await self.__get_standings(stage_data, tournament_data)
+            return stage_data
+        except:
+            return None
 
     async def get_tournament(self, tournament_id: str) -> Optional[Tournament]:
         async with aiohttp.ClientSession() as session:
