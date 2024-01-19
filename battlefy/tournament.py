@@ -233,10 +233,11 @@ class TournamentClient:
                     raise ValueError(f"Invalid ID {stage_data.id}")
                 standing_data = await resp.json()
                 for standing in standing_data:
-                    standing = RoundRobinStanding(standing, tournament_data.get_team_from_team_id(standing["teamID"]))
-                    stage_data.add_standing(standing)
-                    if standing.team and standing.team.id:
-                        team_standings[standing.team.id] = standing
+                    if team_entry := tournament_data.get_team_from_team_id(standing["teamID"]):
+                        standing = RoundRobinStanding(standing, team_entry)
+                        stage_data.add_standing(standing)
+                        if standing.team and standing.team.id:
+                            team_standings[standing.team.id] = standing
             # Get RR groups
             groups: List[List[RoundRobinStanding]] = []
             async with session.get(
@@ -248,7 +249,8 @@ class TournamentClient:
                 for group in group_request[0]["groups"]:
                     working_group = []
                     for team in group["teamIDs"]:
-                        working_group.append(team_standings[team])
+                        if team in team_standings:
+                            working_group.append(team_standings[team])
                     groups.append(working_group)
         #  Calculate RR standings
         for rr_group in groups:
