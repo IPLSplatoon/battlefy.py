@@ -143,7 +143,8 @@ class TournamentClient:
         for key, value in placement_data.items():
             set_value = list(set(value))  # Remove duplicate teams in a round
             for team_id in set_value:
-                team_standings[team_id].set_place(rankings[key - 1])
+                if team_id in team_standings:
+                    team_standings[team_id].set_place(rankings[key - 1])
                 stage_data.add_standing(team_standings[team_id])
         return stage_data
 
