@@ -1,5 +1,6 @@
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Optional
 from datetime import datetime
+from dateutil import parser
 
 
 class Player:
@@ -11,8 +12,8 @@ class Player:
     persistent_player_id: Optional[str]
     user_id: Optional[str]
     owner_id: str
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
     user_slug: Optional[str]
     username: Optional[str]
     avatar_url: Optional[str]
@@ -27,8 +28,10 @@ class Player:
         self.persistent_player_id = data.get("persistentPlayerID")
         self.user_id = data.get("userID")
         self.owner_id = data.get("ownerID")
-        self.created_at = datetime.fromisoformat(data.get("createdAt"))
-        self.updated_at = datetime.fromisoformat(data.get("updatedAt"))
+        if "createdAt" in data:
+            self.created_at = parser.isoparse(data.get("createdAt"))
+        if "updatedAt" in data:
+            self.updated_at = parser.isoparse(data.get("updatedAt"))
         self.user_slug = data.get("userSlug")
         self.username = data.get("username")
         self.avatar_url = data.get("avatarUrl")
@@ -54,8 +57,8 @@ class PersistentTeam:
     short_description: str
     banner_url: str
     sponsor_banner_url: str
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
     persistent_player_ids: List[str]
     persistent_captain_id: str
     pending_player_ids: List[Any]
@@ -69,14 +72,16 @@ class PersistentTeam:
         self.short_description = data.get("shortDescription")
         self.banner_url = data.get("bannerUrl")
         self.sponsor_banner_url = data.get("sponsorBannerUrl")
-        self.created_at = datetime.fromisoformat(data.get("createdAt"))
-        self.updated_at = datetime.fromisoformat(data.get("updatedAt"))
+        if "createdAt" in data:
+            self.created_at = parser.isoparse(data.get("createdAt"))
+        if "updatedAt" in data:
+            self.updated_at = parser.isoparse(data.get("updatedAt"))
         self.persistent_player_ids = data.get("persistentPlayerIDs")
         self.persistent_captain_id = data.get("persistentCaptainID")
         self.pending_player_ids = data.get("pendingPlayerIDs")
         self.owner_id = data.get("ownerID")
         if data.get("deletedAt"):
-            self.deleted_at = datetime.fromisoformat(data.get("deletedAt"))
+            self.deleted_at = parser.isoparse(data.get("deletedAt"))
 
 
 class Team:
@@ -88,7 +93,7 @@ class Team:
     user_id: str
     custom_fields: List[CustomField]
     owner_id: str
-    created_at: datetime
+    created_at: Optional[datetime]
     player_ids: List[str]
     captain_id: str
     checked_in_at: Optional[datetime]
@@ -105,11 +110,12 @@ class Team:
         self.user_id = data.get("userID")
         self.custom_fields = [CustomField(c) for c in data.get("customFields", [])]
         self.owner_id = data.get("ownerID")
-        self.created_at = datetime.fromisoformat(data.get("createdAt"))
+        if "createdAt" in data:
+            self.created_at = parser.isoparse(data.get("createdAt"))
         self.player_ids = data.get("playerIDs")
         self.captain_id = data.get("captainID")
         if "checkedInAt" in data:
-            self.checked_in_at = datetime.fromisoformat(data.get("checkedInAt"))
+            self.checked_in_at = parser.isoparse(data.get("checkedInAt"))
         self.captain = Player(data.get("captain"))
         self.players = [Player(p) for p in data.get("players", [])]
         self.persistent_team = PersistentTeam(data.get("persistentTeam", {}))

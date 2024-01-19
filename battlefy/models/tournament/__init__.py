@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Optional
 from datetime import datetime
+from dateutil import parser
 from .stage import Stage
 from .team import Team
 
@@ -53,7 +54,7 @@ class Rules:
 
 class Tournament:
     id: str
-    start_time: datetime
+    start_time: Optional[datetime]
     rules: Rules
     players_per_team: int
     custom_fields: List[TournamentCustomField]
@@ -82,9 +83,9 @@ class Tournament:
     is_public: bool
     is_suspended: bool
     is_roster_locked: bool
-    created_at: datetime
-    updated_at: datetime
-    check_in_start_time: datetime
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+    check_in_start_time: Optional[datetime]
     slug: str
     cloned_from_tournament_id: str
     registration_enabled: bool
@@ -92,7 +93,7 @@ class Tournament:
     organization_id: str
     game_id: str
     stage_ids: List[str]
-    last_completed_match_at: datetime
+    last_completed_match_at: Optional[datetime]
     template_id: str
 
     teams: List[Team]
@@ -100,7 +101,8 @@ class Tournament:
 
     def __init__(self, data: dict):
         self.id = data.get("_id")
-        self.start_time = datetime.fromisoformat(data.get("startTime"))
+        if "startTime" in data:
+            self.start_time = parser.isoparse(data.get("startTime"))
         self.rules = Rules(**data.get("rules"))
         self.players_per_team = data.get("playersPerTeam")
         self.custom_fields = [TournamentCustomField(x) for x in data.get("customFields")]
@@ -129,9 +131,12 @@ class Tournament:
         self.is_public = data.get("isPublic")
         self.is_suspended = data.get("isSuspended")
         self.is_roster_locked = data.get("isRosterLocked")
-        self.created_at = datetime.fromisoformat(data.get("createdAt"))
-        self.updated_at = datetime.fromisoformat(data.get("updatedAt"))
-        self.check_in_start_time = datetime.fromisoformat(data.get("checkInStartTime"))
+        if "createdAt" in data:
+            self.created_at = parser.isoparse(data.get("createdAt"))
+        if "updatedAt" in data:
+            self.updated_at = parser.isoparse(data.get("updatedAt"))
+        if "checkInStartTime" in data:
+            self.check_in_start_time = parser.isoparse(data.get("checkInStartTime"))
         self.slug = data.get("slug")
         self.cloned_from_tournament_id = data.get("clonedFromTournamentID")
         self.registration_enabled = data.get("registrationEnabled")
@@ -139,7 +144,8 @@ class Tournament:
         self.organization_id = data.get("organizationID")
         self.game_id = data.get("gameID")
         self.stage_ids = data.get("stageIDs")
-        self.last_completed_match_at = datetime.fromisoformat(data.get("lastCompletedMatchAt"))
+        if "lastCompletedMatchAt" in data:
+            self.last_completed_match_at = parser.isoparse(data.get("lastCompletedMatchAt"))
         self.template_id = data.get("templateID")
         stages_data = data.get("stages", [])
         self.stages = []

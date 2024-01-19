@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "battlefy.py"
-version = "0.4.0"
+version = "0.5.0"
 description = "A Python Library for Battlefy.com"
 authors = ["Vincent Lee <vlee@vlee.me.uk>"]
 license = "MIT"

@@ -34,7 +34,7 @@ def to_enum(c: Type[EnumT], x: Any) -> EnumT:
 
 
 def from_datetime(x: Any) -> datetime:
-    return dateutil.parser.parse(x)
+    return dateutil.parser.isoparse(x)
 
 
 def from_int(x: Any) -> int:

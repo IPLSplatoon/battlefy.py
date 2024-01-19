@@ -34,7 +34,7 @@ def from_bool(x: Any) -> bool:
 
 
 def from_datetime(x: Any) -> datetime:
-    return dateutil.parser.parse(x)
+    return dateutil.parser.isoparse(x)
 
 
 def from_int(x: Any) -> int:

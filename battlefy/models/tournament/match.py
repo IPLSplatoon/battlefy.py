@@ -1,7 +1,7 @@
 from dataclasses import dataclass, InitVar, field
 from .team import Team
 from datetime import datetime
-import dateutil.parser
+from dateutil import parser
 
 
 @dataclass
@@ -12,8 +12,8 @@ class Game:
     created_at: datetime = field(init=False, default=None)
 
     def __post_init__(self, game_data: dict):
-        if created_at := game_data.get("createdAt", None):
-            self.created_at = dateutil.parser.parse(created_at)
+        if created_at := game_data.get("createdAt"):
+            self.created_at = parser.isoparse(created_at)
         self.game_id = game_data.get("_id", None)
         stats = game_data.get("stats")
         if stats:
@@ -36,9 +36,9 @@ class Match:
     bottom_win: int = field(init=False, default=0)
 
     def __post_init__(self, match_data: dict):
-        self.id = match_data.get("_id", None)
-        if created_at := match_data.get("createdAt", None):
-            self.created_at = dateutil.parser.parse(created_at)
+        self.id = match_data.get("_id")
+        if created_at := match_data.get("createdAt"):
+            self.created_at = parser.isoparse(created_at)
         if "stats" in match_data:
             for g in match_data.get("stats", []):
                 self.games.append(Game(g))

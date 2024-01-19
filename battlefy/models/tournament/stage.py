@@ -1,7 +1,8 @@
 from datetime import datetime
+from dateutil import parser
 from .standing import Standing
 from .match import Match
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 
 class Bracket:
@@ -24,15 +25,15 @@ class Bracket:
 class Stage:
     id: str
     name: str
-    start_time: datetime
+    start_time: Optional[datetime]
     has_match_checkin: bool
     has_checkin_timer: bool
     has_confirm_score: bool
     bracket: Bracket
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
     has_started: bool
-    started_at: datetime
+    started_at: Optional[datetime]
 
     standings: List[Standing]
     matches: List[Match]
@@ -43,16 +44,19 @@ class Stage:
     def __init__(self, data: dict) -> None:
         self.id = data.get("_id")
         self.name = data.get("name")
-        self.start_time = datetime.fromisoformat(data.get("startTime"))
+        if "startTime" in data:
+            self.start_time = parser.isoparse(data.get("startTime"))
         self.has_match_checkin = data.get("hasMatchCheckin")
         self.has_checkin_timer = data.get("hasCheckinTimer")
         self.has_confirm_score = data.get("hasConfirmScore")
         self.bracket = Bracket(data.get("bracket"))
-        self.created_at = datetime.fromisoformat(data.get("createdAt"))
-        self.updated_at = datetime.fromisoformat(data.get("updatedAt"))
+        if "createdAt" in data:
+            self.created_at = parser.isoparse(data.get("createdAt"))
+        if "updatedAt" in data:
+            self.updated_at = parser.isoparse(data.get("updatedAt"))
         self.has_started = data.get("hasStarted")
         if "startedAt" in data:
-            self.started_at = datetime.fromisoformat(data.get("startedAt"))
+            self.started_at = parser.isoparse(data.get("startedAt"))
         self.standings = []
         self.matches = []
         self.raw_matches = []
