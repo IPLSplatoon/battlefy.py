@@ -9,9 +9,9 @@ class Contact:
     type: str
     details: str
 
-    def __init__(self, type: str, details: str) -> None:
-        self.type = type
-        self.details = details
+    def __init__(self, data: dict) -> None:
+        self.type = data.get("type", "")
+        self.details = data.get("details", "")
 
 
 class TournamentCustomField:
@@ -35,21 +35,13 @@ class EmailsSent:
         self.now = data.get("now")
         self.pending_team_notification = data.get("pendingTeamNotification")
 
-
-class Features:
-    enable_valorant_asr: bool
-
-    def __init__(self, data: dict) -> None:
-        self.enable_valorant_asr = data.get("enableValorantASR")
-
-
 class Rules:
     complete: str
     critical: str
 
-    def __init__(self, complete: str, critical: str) -> None:
-        self.complete = complete
-        self.critical = critical
+    def __init__(self, data: dict) -> None:
+        self.complete = data.get("complete", "")
+        self.critical = data.get("critical", "")
 
 
 class Tournament:
@@ -66,7 +58,6 @@ class Tournament:
     contact_details: str
     prizes: str
     schedule: str
-    features: Features
     check_in_required: bool
     check_in_starts: int
     type: str
@@ -103,18 +94,17 @@ class Tournament:
         self.id = data.get("_id")
         if "startTime" in data:
             self.start_time = parser.isoparse(data.get("startTime"))
-        self.rules = Rules(**data.get("rules"))
+        self.rules = Rules(data.get("rules", {}))
         self.players_per_team = data.get("playersPerTeam")
         self.custom_fields = [TournamentCustomField(x) for x in data.get("customFields")]
         self.user_can_report = data.get("userCanReport")
         self.name = data.get("name")
         self.about = data.get("about")
         self.banner_url = data.get("bannerUrl")
-        self.contact = Contact(**data.get("contact"))
+        self.contact = Contact(data.get("contact", {}))
         self.contact_details = data.get("contactDetails")
         self.prizes = data.get("prizes")
         self.schedule = data.get("schedule")
-        self.features = Features(data.get("features", {}))
         self.check_in_required = data.get("checkInRequired")
         self.check_in_starts = data.get("checkInStarts")
         self.type = data.get("type")
