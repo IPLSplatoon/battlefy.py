@@ -4,7 +4,7 @@ from dateutil import parser
 
 
 class Player:
-    id: str
+    id: Optional[str]
     on_team: bool
     is_free_agent: bool
     be_captain: bool
@@ -20,7 +20,7 @@ class Player:
     discord_id: Optional[str]
 
     def __init__(self, data: dict) -> None:
-        self.id = data.get("_id")
+        self.id = data.get("_id", None)
         self.on_team = data.get("onTeam")
         self.is_free_agent = data.get("isFreeAgent")
         self.be_captain = data.get("beCaptain")
@@ -97,12 +97,12 @@ class Team:
     player_ids: List[str]
     captain_id: str
     checked_in_at: Optional[datetime]
-    captain: Player
+    captain: Optional[Player]
     players: List[Player]
     persistent_team: PersistentTeam
 
     def __init__(self, data: dict) -> None:
-        self.id = data.get("_id")
+        self.id = data.get("_id", None)
         self.name = data.get("name")
         self.pending_team_id = data.get("pendingTeamID")
         self.persistent_team_id = data.get("persistentTeamID")
@@ -116,7 +116,8 @@ class Team:
         self.captain_id = data.get("captainID")
         if "checkedInAt" in data:
             self.checked_in_at = parser.isoparse(data.get("checkedInAt"))
-        self.captain = Player(data.get("captain"))
+        if "captain" in data:
+            self.captain = Player(data.get("captain"))
         self.players = [Player(p) for p in data.get("players", [])]
         self.persistent_team = PersistentTeam(data.get("persistentTeam", {}))
 
