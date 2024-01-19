@@ -235,7 +235,8 @@ class TournamentClient:
                 for standing in standing_data:
                     standing = RoundRobinStanding(standing, tournament_data.get_team_from_team_id(standing["teamID"]))
                     stage_data.add_standing(standing)
-                    team_standings[standing.team.id] = standing
+                    if standing.team.id:
+                        team_standings[standing.team.id] = standing
             # Get RR groups
             groups: List[List[RoundRobinStanding]] = []
             async with session.get(
